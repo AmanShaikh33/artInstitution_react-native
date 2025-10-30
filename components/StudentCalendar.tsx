@@ -1,4 +1,4 @@
-// components/StudentCalendar.tsx
+
 import React, { useEffect, useState } from "react";
 import { View, Text, Alert } from "react-native";
 import { Calendar } from "react-native-calendars";

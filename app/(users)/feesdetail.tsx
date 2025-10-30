@@ -27,7 +27,7 @@ const FeesDetail = () => {
         }
 
         const students = await fetchAllStudents();
-        // Strict match by email (case-insensitive)
+        
         const current = students.find(
           (s: any) => (s?.email || "").trim().toLowerCase() === email
         );

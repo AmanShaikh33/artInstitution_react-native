@@ -15,18 +15,18 @@ export default function Slide2() {
         resizeMode="cover"
       />
 
-    
+      
       <Text className="text-4xl font-bold text-black text-center mb-3">
         📚 Learn & Grow
       </Text>
 
-
+      
       <Text className="text-base text-gray-800 text-center leading-relaxed">
         Access notes, track attendance, receive notices,{"\n"}
         and stay informed – all in one powerful app!
       </Text>
 
-    
+   
       <TouchableOpacity
         className="mt-12 px-10 py-3 bg-black rounded-full shadow-md"
         onPress={() => router.push("/(auth)/login")}

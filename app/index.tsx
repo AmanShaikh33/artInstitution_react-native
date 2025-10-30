@@ -34,5 +34,5 @@ export default function Index() {
     return () => clearTimeout(timeout);
   }, []);
 
-  return null; // Or a loading indicator
+  return null; 
 }

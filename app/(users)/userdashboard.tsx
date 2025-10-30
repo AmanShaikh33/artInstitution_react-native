@@ -36,16 +36,15 @@ const UserDashboard = () => {
           return;
         }
 
-        const storedId = Number(stored.id); // Ensure it's a number
+        const storedId = Number(stored.id); 
         setUserName(stored.name || "");
         console.log("✅ Logged-in user data:", stored);
 
-        // Fetch latest 5 notices
         const noticeData = await fetchAllNotices();
         setNotices(noticeData.slice(-5).reverse());
         console.log("📢 Notices fetched:", noticeData);
 
-        // Fetch latest 5 homework
+        
         const homeworkData = await getAllHomework();
         setHomeworkList(homeworkData.slice(-5).reverse());
 
@@ -101,7 +100,7 @@ const UserDashboard = () => {
 
   return (
     <ScrollView className="flex-1 bg-gray-50 px-6 pt-12">
-      {/* Welcome & Logout */}
+   
       <View className="flex-row justify-between items-center mb-6">
         <Text className="text-2xl font-bold text-gray-900 flex-1">
           Welcome to Your Dashboard{userName ? `, ${userName}` : ""} 👋
@@ -114,12 +113,12 @@ const UserDashboard = () => {
         </TouchableOpacity>
       </View>
 
-      {/* Student Calendar */}
+      
       <View className="mb-6 rounded-xl overflow-hidden shadow">
         <StudentCalendar />
       </View>
 
-      {/* Attendance Overview */}
+      
       <View className="bg-indigo-100 p-4 rounded-xl my-4 shadow-sm">
         <Text className="text-lg font-semibold text-indigo-800 mb-3">
           📊 Attendance Overview

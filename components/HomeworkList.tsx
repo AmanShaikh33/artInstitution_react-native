@@ -1,8 +1,7 @@
 import { View, Text, FlatList, ActivityIndicator, TouchableOpacity, Alert } from 'react-native';
 import React, { useEffect, useState } from 'react';
-import { getAllHomework, deleteHomework } from '../utils/api'; // adjust path if needed
-import dayjs from 'dayjs'; // for formatting date
-
+import { getAllHomework, deleteHomework } from '../utils/api'; 
+import dayjs from 'dayjs'; 
 const HomeworkList = () => {
   const [homeworkList, setHomeworkList] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -54,7 +53,7 @@ const HomeworkList = () => {
         {dayjs(item.created_at).format('DD MMM YYYY, hh:mm A')}
       </Text>
 
-      {/* Delete Button */}
+      
       <TouchableOpacity
         className="bg-red-600 px-3 py-1 rounded mt-2 self-start"
         onPress={() => handleDelete(item.id)}

@@ -30,7 +30,7 @@ export default function PreviousAttendance({ refresh }: { refresh: boolean }) {
     try {
       await deleteAttendance(id);
       Alert.alert("✅", "Attendance deleted");
-      // Refresh after deletion
+   
       const updated = await fetchAllAttendance();
       setRecords(updated);
     } catch (e) {

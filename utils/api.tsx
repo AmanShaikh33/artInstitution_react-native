@@ -2,7 +2,7 @@ import axios from "axios";
 
 const BASE_URL = "https://kedarbhame.pythonanywhere.com";
 
-// Create Axios instance
+
 const api = axios.create({
   baseURL: BASE_URL,
   headers: {
@@ -11,7 +11,7 @@ const api = axios.create({
   },
 });
 
-// ✅ STUDENT REGISTRATION (Teacher creates student)
+
 export const createStudentByTeacher = async (studentData: {
   name: string;
   email: string;
@@ -47,30 +47,28 @@ export const loginStudent = async (email: string, password: string) => {
   }
 };
 
-// ✅ FETCH ALL STUDENTS
-// ✅ FETCH ALL STUDENTS (returns array only)
 export const fetchAllStudents = async () => {
   try {
     const response = await api.get("/student/all/");
-    // Extract only the `data` array
+    
     return response.data?.data ?? [];
   } catch (error: any) {
     console.error("❌ fetchAllStudents error:", error.message, error);
-    return []; // safe fallback
+    return [];
   }
 };
 
 export const getStudentDetails = async (id: number) => {
   try {
     const response = await axios.get(`${BASE_URL}/student/details/${id}/`);
-    return response.data.data; // returns {status, code, message, data}
+    return response.data.data; 
   } catch (error: any) {
     console.error("❌ Error fetching student details:", error.response?.data || error.message);
     throw error;
   }
 };
 
-// ✅ DELETE STUDENT
+
 export const deleteStudent = async (id: string) => {
   try {
     const res = await api.delete(`/student/student/delete/${id}/`);
@@ -81,15 +79,14 @@ export const deleteStudent = async (id: string) => {
   }
 };
 
-// ✅ ATTENDANCE - ADD
 
   
 export const addAttendance = async (studentId: number, date: string, present: boolean) => {
   try {
     const response = await api.post("/main_admin/attendance/add/", {
-      date,        // Must be string in YYYY-MM-DD format
-      present,     // true or false
-      student: studentId // Only the ID, not the full object
+      date,        
+      present,     
+      student: studentId 
     });
     return response.data;
   } catch (error: any) {
@@ -98,20 +95,20 @@ export const addAttendance = async (studentId: number, date: string, present: bo
   }
 };
 
-// ✅ ATTENDANCE - FETCH ALL
+
 export const fetchAllAttendance = async () => {
   try {
     const response = await axios.get(`${BASE_URL}/main_admin/attendance/all/`);
 
-    // Response looks like: { status, code, message, data: [...] }
-    return response.data.data; // return only the attendance array
+ 
+    return response.data.data; 
   } catch (error: any) {
     console.error("❌ Error fetching attendance:", error.response?.data || error.message);
-    throw error; // rethrow so caller handles it
+    throw error; 
   }
 };
 
-// ✅ ATTENDANCE - UPDATE
+
 export const updateAttendance = async (attendanceId: number, payload: { date: string; present: boolean; student: number }) => {
   try {
     const response = await axios.put(
@@ -134,7 +131,7 @@ export const updateAttendance = async (attendanceId: number, payload: { date: st
 };
 
 
-// ✅ ATTENDANCE - DELETE
+
 export const deleteAttendance = async (id: number) => {
   try {
     const response = await api.delete(`/main_admin/attendance/delete/${id}/`);
@@ -145,7 +142,7 @@ export const deleteAttendance = async (id: number) => {
   }
 };
 
-// ✅ NOTICE - ADD
+
 export const addNotice = async (noticeData: {
   title: string;
   description: string;
@@ -156,24 +153,23 @@ export const addNotice = async (noticeData: {
 }) => {
   try {
     const response = await api.post("/main_admin/notice/notice/add/", noticeData);
-    return response.data; // Returns API response
+    return response.data; 
   } catch (error: any) {
     console.error("Error adding notice:", error);
     throw error.response?.data || error.message;
   }
 };
 
-// ✅ NOTICE - FETCH ALL
 export const fetchAllNotices = async (page: number = 1) => {
   try {
     const response = await api.get(`/main_admin/notice/notice/all/?page=${page}`);
-    return response.data.data; // Will return {status, code, message, data}
+    return response.data.data; 
   } catch (error: any) {
     console.error("Error fetching notices:", error);
     throw error.response?.data || error.message;
   }
 };
-// ✅ NOTICE - UPDATE
+
 export const updateNotice = async (
   id: number,
   noticeData: {
@@ -187,7 +183,7 @@ export const updateNotice = async (
 ) => {
   try {
     const response = await api.put(`/main_admin/notice/notice/update/${id}/`, noticeData);
-    return response.data; // {status, code, message, data}
+    return response.data; 
   } catch (error: any) {
     console.error("Error updating notice:", error);
     throw error.response?.data || error.message;
@@ -197,7 +193,7 @@ export const updateNotice = async (
 export const deleteNotice = async (id: number) => {
   try {
     const response = await api.delete(`/main_admin/notice/notice/delete/${id}/`);
-    return response.data; // {status, code, message}
+    return response.data; 
   } catch (error: any) {
     console.error("Error deleting notice:", error);
     throw error.response?.data || error.message;
@@ -290,7 +286,7 @@ export const addHomework = async (
       created_at,
     });
 
-    return response.data; // contains status, message, and data
+    return response.data; 
   } catch (error: any) {
     console.error("❌ Error adding homework:", error.response?.data || error.message);
     throw error.response?.data || error;
@@ -300,7 +296,7 @@ export const addHomework = async (
 export const getAllHomework = async () => {
   try {
     const response = await axios.get(`${BASE_URL}/main_admin/homework/all/`);
-    return response.data.data; // returns the array of homework
+    return response.data.data;
   } catch (error: any) {
     console.error("❌ Error fetching homework:", error.response?.data || error.message);
     throw error.response?.data || error;
@@ -310,7 +306,7 @@ export const getAllHomework = async () => {
 export const deleteHomework = async (id: number) => {
   try {
     const response = await axios.delete(`${BASE_URL}/main_admin/homework/delete/${id}/`);
-    return response.data; // contains status and message
+    return response.data; 
   } catch (error: any) {
     console.error("❌ Error deleting homework:", error.response?.data || error.message);
     throw error.response?.data || error;
