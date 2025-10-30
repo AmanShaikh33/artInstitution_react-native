@@ -10,7 +10,7 @@ import {
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { loginStudent } from "../../utils/api"; // your custom API function
+import { loginStudent } from "../../utils/api";
 
 export default function Login() {
   const router = useRouter();
@@ -21,41 +21,47 @@ export default function Login() {
   const [loading, setLoading] = useState(false);
 
   const handleLogin = async () => {
-  if (!email || !password) {
-    Alert.alert("Error", "All fields are required");
-    return;
-  }
-
-  setLoading(true);
-  try {
-    const res = await loginStudent(email, password);
-
-    const data = res.data;
-    // ✅ Save first, then navigate
-    await AsyncStorage.setItem("isLoggedIn", "true");
-    await AsyncStorage.setItem("userData", JSON.stringify(res)); 
-
-
-    console.log("✅ Saved isLoggedIn & userData");
-
-    Alert.alert("Success", "Login successful");
-
-    // ✅ Redirect based on user type
-    if (res?.type === "admin") {
-      router.replace("/(teacher)/teacherDashboard");
-    } else if (res?.type === "student") {
-      router.replace("/(users)/userdashboard");
-    } else {
-      Alert.alert("Error", "Invalid user type");
+    if (!email || !password) {
+      Alert.alert("Error", "All fields are required");
+      return;
     }
-  } catch (error: any) {
-    console.error("Login error:", error);
-    Alert.alert("Login Failed", error.message || "Invalid credentials");
-  } finally {
-    setLoading(false);
-  }
-};
 
+    setLoading(true);
+    try {
+      const res = await loginStudent(email, password);
+
+      console.log("✅ Login response:", res);
+
+      
+      const studentData = res?.data?.data || res?.data;
+
+      if (!studentData || !studentData.email) {
+        Alert.alert("Error", "Invalid login response from server");
+        return;
+      }
+
+      await AsyncStorage.setItem("isLoggedIn", "true");
+      await AsyncStorage.setItem("userData", JSON.stringify(studentData));
+      await AsyncStorage.setItem("userType", res.type || "student");
+
+      console.log("✅ Saved userData:", studentData);
+
+      Alert.alert("Success", "Login successful");
+
+      if (res.type === "admin") {
+        router.replace("/(teacher)/teacherDashboard");
+      } else if (res.type === "student") {
+        router.replace("/(users)/userdashboard");
+      } else {
+        Alert.alert("Error", "Invalid user type");
+      }
+    } catch (error: any) {
+      console.error("Login error:", error);
+      Alert.alert("Login Failed", error.message || "Invalid credentials");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <View className="flex-1 bg-white justify-center px-6">
@@ -63,7 +69,7 @@ export default function Login() {
         Welcome Back 👋
       </Text>
 
-      {/* Email Input */}
+   
       <View className="mb-4">
         <Text className="text-sm font-semibold text-gray-700 mb-1">Email</Text>
         <TextInput
@@ -76,7 +82,7 @@ export default function Login() {
         />
       </View>
 
-      {/* Password Input */}
+    
       <View className="mb-6">
         <Text className="text-sm font-semibold text-gray-700 mb-1">Password</Text>
         <View className="flex-row items-center border border-gray-300 rounded-xl bg-white px-3">
@@ -112,14 +118,6 @@ export default function Login() {
             Login
           </Text>
         )}
-      </TouchableOpacity>
-
-      {/* Navigate to Register */}
-      <TouchableOpacity onPress={() => router.push("/(auth)/register")}>
-        <Text className="text-center text-gray-600">
-          Don’t have an account?{" "}
-          <Text className="text-black font-semibold">Register</Text>
-        </Text>
       </TouchableOpacity>
     </View>
   );

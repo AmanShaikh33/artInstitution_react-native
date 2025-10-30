@@ -21,8 +21,8 @@ export const createStudentByTeacher = async (studentData: {
   total_fees: number;
 }) => {
   try {
-    const response = await api.post("/student/register_api/", studentData);
-    return response.data;
+    const response = await api.post("/student/add/", studentData);
+    return response.data.data;
   } catch (error: any) {
     console.error("❌ Failed to create student:", error);
     throw error.response?.data || { message: "Failed to create student" };
@@ -48,12 +48,24 @@ export const loginStudent = async (email: string, password: string) => {
 };
 
 // ✅ FETCH ALL STUDENTS
+// ✅ FETCH ALL STUDENTS (returns array only)
 export const fetchAllStudents = async () => {
   try {
-    const response = await api.get("/student/student/student_api/");
-    return response.data;
+    const response = await api.get("/student/all/");
+    // Extract only the `data` array
+    return response.data?.data ?? [];
   } catch (error: any) {
     console.error("❌ fetchAllStudents error:", error.message, error);
+    return []; // safe fallback
+  }
+};
+
+export const getStudentDetails = async (id: number) => {
+  try {
+    const response = await axios.get(`${BASE_URL}/student/details/${id}/`);
+    return response.data.data; // returns {status, code, message, data}
+  } catch (error: any) {
+    console.error("❌ Error fetching student details:", error.response?.data || error.message);
     throw error;
   }
 };
@@ -61,7 +73,7 @@ export const fetchAllStudents = async () => {
 // ✅ DELETE STUDENT
 export const deleteStudent = async (id: string) => {
   try {
-    const res = await api.delete(`/student/student/student_api/${id}/`);
+    const res = await api.delete(`/student/student/delete/${id}/`);
     return res.data;
   } catch (err) {
     console.error("❌ Failed to delete student:", err);
@@ -70,39 +82,57 @@ export const deleteStudent = async (id: string) => {
 };
 
 // ✅ ATTENDANCE - ADD
-export const addAttendance = async (attendanceData: {
-  date: string;
-  present: boolean;
-  student: number;
-}) => {
-  const res = await api.post("/main_admin/attendance/add/", attendanceData);
-  return res.data;
+
+  
+export const addAttendance = async (studentId: number, date: string, present: boolean) => {
+  try {
+    const response = await api.post("/main_admin/attendance/add/", {
+      date,        // Must be string in YYYY-MM-DD format
+      present,     // true or false
+      student: studentId // Only the ID, not the full object
+    });
+    return response.data;
+  } catch (error: any) {
+    console.error("❌ Error adding attendance:", error.response?.data || error.message);
+    return null;
+  }
 };
 
 // ✅ ATTENDANCE - FETCH ALL
 export const fetchAllAttendance = async () => {
   try {
-    const response = await api.get("/main_admin/attendance/all/");
-    return response.data.all_attendance;
-  } catch (err) {
-    console.error("❌ Failed to fetch attendance:", err);
-    throw err;
+    const response = await axios.get(`${BASE_URL}/main_admin/attendance/all/`);
+
+    // Response looks like: { status, code, message, data: [...] }
+    return response.data.data; // return only the attendance array
+  } catch (error: any) {
+    console.error("❌ Error fetching attendance:", error.response?.data || error.message);
+    throw error; // rethrow so caller handles it
   }
 };
 
 // ✅ ATTENDANCE - UPDATE
-export const updateAttendance = async (
-  id: number,
-  data: { date: string; present: boolean; student: number }
-) => {
+export const updateAttendance = async (attendanceId: number, payload: { date: string; present: boolean; student: number }) => {
   try {
-    const res = await api.put(`/main_admin/attendance/update/${id}/`, data);
-    return res.data;
-  } catch (err) {
-    console.error("❌ Failed to update attendance:", err);
-    throw err;
+    const response = await axios.put(
+      `${BASE_URL}/main_admin/attendance/update/${attendanceId}/`,
+      payload,
+      {
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+      }
+    );
+
+    console.log("✅ Attendance updated:", response.data);
+    return response.data;
+  } catch (error: any) {
+    console.error("❌ Error updating attendance:", error.response?.data || error.message);
+    return null;
   }
 };
+
 
 // ✅ ATTENDANCE - DELETE
 export const deleteAttendance = async (id: number) => {
@@ -119,41 +149,70 @@ export const deleteAttendance = async (id: number) => {
 export const addNotice = async (noticeData: {
   title: string;
   description: string;
+  category?: string;
+  priority?: string;
+  status?: string;
+  created_at?: string;
 }) => {
-  const response = await api.post("/main_admin/notice/add/", noticeData);
-  return response.data.notice;
+  try {
+    const response = await api.post("/main_admin/notice/notice/add/", noticeData);
+    return response.data; // Returns API response
+  } catch (error: any) {
+    console.error("Error adding notice:", error);
+    throw error.response?.data || error.message;
+  }
 };
 
 // ✅ NOTICE - FETCH ALL
-export const fetchAllNotices = async () => {
-  const response = await api.get("/main_admin/notice/all/");
-  return response.data.all_notice;
+export const fetchAllNotices = async (page: number = 1) => {
+  try {
+    const response = await api.get(`/main_admin/notice/notice/all/?page=${page}`);
+    return response.data.data; // Will return {status, code, message, data}
+  } catch (error: any) {
+    console.error("Error fetching notices:", error);
+    throw error.response?.data || error.message;
+  }
 };
-
 // ✅ NOTICE - UPDATE
 export const updateNotice = async (
   id: number,
-  noticeData: { title: string; description: string }
+  noticeData: {
+    title: string;
+    description: string;
+    category?: string;
+    priority?: string;
+    status?: string;
+    created_at?: string;
+  }
 ) => {
-  const response = await api.put(`/main_admin/notice/update/${id}/`, noticeData);
-  return response.data.updated_notice;
+  try {
+    const response = await api.put(`/main_admin/notice/notice/update/${id}/`, noticeData);
+    return response.data; // {status, code, message, data}
+  } catch (error: any) {
+    console.error("Error updating notice:", error);
+    throw error.response?.data || error.message;
+  }
 };
 
-// ✅ NOTICE - DELETE
 export const deleteNotice = async (id: number) => {
-  const response = await api.delete(`/main_admin/notice/delete/${id}/`);
-  return response.data;
+  try {
+    const response = await api.delete(`/main_admin/notice/notice/delete/${id}/`);
+    return response.data; // {status, code, message}
+  } catch (error: any) {
+    console.error("Error deleting notice:", error);
+    throw error.response?.data || error.message;
+  }
 };
 
 // ✅ CLASS SCHEDULING - ADD
 export const scheduleClass = async (date: string, detail: string) => {
   try {
-    const response = await api.post(`/main_admin/calendercalender/`, {
+    const response = await api.post(`/main_admin/calender/add/`, {
       date,
       present: true,
       detail,
     });
-    return response.data;
+    return response.data.data;
   } catch (error: any) {
     console.error("❌ Failed to schedule class:", error?.response?.data || error);
     throw error?.response?.data || { message: "Unknown error" };
@@ -163,8 +222,8 @@ export const scheduleClass = async (date: string, detail: string) => {
 // ✅ CLASS SCHEDULING - FETCH ALL
 export const getScheduledClasses = async () => {
   try {
-    const response = await api.get(`/main_admin/calendercalender/`);
-    return response.data; // returns array of { id, date, present, detail }
+    const response = await api.get(`/main_admin/calender/all/`);
+    return response.data.data; // returns array of { id, date, present, detail }
   } catch (error) {
     console.error("❌ Failed to fetch scheduled classes", error);
     throw error;
@@ -176,7 +235,7 @@ export const updateScheduledClass = async (
   id: number,
   payload: { date: string; present: boolean; detail: string }
 ) => {
-  const res = await api.put(`/main_admin/calendercalender/${id}/`, payload);
+  const res = await api.put(`/main_admin/calender/update/${id}/`, payload);
   return res.data;
 };
 
@@ -194,7 +253,7 @@ export const getAttendanceDetails = async (id: number) => {
 
 export const fetchStudentById = async (id: string | number) => {
   try {
-    const response = await api.get(`/student/student/student_api/${id}/`);
+    const response = await api.get(`/student/student/details/${id}/`);
     return response.data;
   } catch (error: any) {
     console.error("❌ fetchStudentById error:", error.message, error);
@@ -216,6 +275,45 @@ export const payStudentFees = async (studentId: number, amount: number, remarks:
   } catch (error: any) {
     console.error("❌ payStudentFees error:", error.message, error);
     throw error;
+  }
+};
+
+export const addHomework = async (
+  title: string,
+  description: string,
+  created_at: string
+) => {
+  try {
+    const response = await axios.post(`${BASE_URL}/main_admin/homework/add/`, {
+      title,
+      description,
+      created_at,
+    });
+
+    return response.data; // contains status, message, and data
+  } catch (error: any) {
+    console.error("❌ Error adding homework:", error.response?.data || error.message);
+    throw error.response?.data || error;
+  }
+};
+
+export const getAllHomework = async () => {
+  try {
+    const response = await axios.get(`${BASE_URL}/main_admin/homework/all/`);
+    return response.data.data; // returns the array of homework
+  } catch (error: any) {
+    console.error("❌ Error fetching homework:", error.response?.data || error.message);
+    throw error.response?.data || error;
+  }
+};
+
+export const deleteHomework = async (id: number) => {
+  try {
+    const response = await axios.delete(`${BASE_URL}/main_admin/homework/delete/${id}/`);
+    return response.data; // contains status and message
+  } catch (error: any) {
+    console.error("❌ Error deleting homework:", error.response?.data || error.message);
+    throw error.response?.data || error;
   }
 };
 

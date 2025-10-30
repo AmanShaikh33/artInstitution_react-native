@@ -9,14 +9,16 @@ import {
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
-import { fetchAllNotices } from "../../utils/api";
+import { fetchAllNotices, getAllHomework } from "../../utils/api";
 import DashboardCalendar from "../../components/DashboardCalendar.tsx";
-import AttendanceStatsCard from "../../components/AttendanceStatsCard.tsx"; // ✅ new stats card
+import AttendanceStatsCard from "../../components/AttendanceStatsCard.tsx";
 
 const TeacherDashboard = () => {
   const router = useRouter();
   const [notices, setNotices] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [homeworkList, setHomeworkList] = useState<any[]>([]);
+  const [loadingNotices, setLoadingNotices] = useState(true);
+  const [loadingHomework, setLoadingHomework] = useState(true);
 
   const handleLogout = async () => {
     Alert.alert("Logout", "Are you sure you want to logout?", [
@@ -40,15 +42,27 @@ const TeacherDashboard = () => {
     const loadNotices = async () => {
       try {
         const data = await fetchAllNotices();
-        setNotices(data.slice(-5).reverse());
+        setNotices(data.slice(-5).reverse()); // latest 5 notices
       } catch (err) {
         Alert.alert("❌", "Failed to load notices");
       } finally {
-        setLoading(false);
+        setLoadingNotices(false);
+      }
+    };
+
+    const loadHomework = async () => {
+      try {
+        const data = await getAllHomework();
+        setHomeworkList(data.slice(-5).reverse()); // latest 5 homeworks
+      } catch (err) {
+        Alert.alert("❌", "Failed to load homework");
+      } finally {
+        setLoadingHomework(false);
       }
     };
 
     loadNotices();
+    loadHomework();
   }, []);
 
   return (
@@ -60,6 +74,7 @@ const TeacherDashboard = () => {
       {/* ✅ Attendance Stats */}
       <AttendanceStatsCard />
 
+      {/* ✅ Edit Students Button */}
       <TouchableOpacity
         onPress={() => router.push("/(teacher)/EditStudentsScreen")}
         className="bg-blue-600 py-3 px-4 rounded-xl mb-6"
@@ -69,6 +84,7 @@ const TeacherDashboard = () => {
         </Text>
       </TouchableOpacity>
 
+      {/* ✅ Logout Button */}
       <TouchableOpacity
         className="bg-red-600 px-8 py-3 rounded-xl mb-4"
         onPress={handleLogout}
@@ -81,18 +97,12 @@ const TeacherDashboard = () => {
       {/* ✅ Calendar Component */}
       <DashboardCalendar />
 
-      <Text className="text-xl font-bold mb-3 text-gray-800">
-        📢 Latest Notices
-      </Text>
-
-      {loading ? (
+      {/* ✅ Notices Section */}
+      <Text className="text-xl font-bold mb-3 text-gray-800">📢 Latest Notices</Text>
+      {loadingNotices ? (
         <ActivityIndicator size="large" color="#4F46E5" />
       ) : (
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          className="mt-2 mb-4"
-        >
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} className="mt-2 mb-4">
           {notices.map((item) => (
             <View
               key={item.id}
@@ -106,6 +116,31 @@ const TeacherDashboard = () => {
               </Text>
               <Text className="text-xs text-gray-500 italic">
                 {new Date(item.created_at).toLocaleString()}
+              </Text>
+            </View>
+          ))}
+        </ScrollView>
+      )}
+
+      {/* ✅ Homework Section */}
+      <Text className="text-xl font-bold mb-3 text-gray-800">📚 Latest Homework</Text>
+      {loadingHomework ? (
+        <ActivityIndicator size="large" color="#4F46E5" />
+      ) : (
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} className="mt-2 mb-4">
+          {homeworkList.map((item) => (
+            <View
+              key={item.id}
+              className="bg-green-50 border border-green-200 p-4 mr-4 rounded-2xl w-64 shadow-md h-[200px]"
+            >
+              <Text className="font-bold text-lg text-green-800 mb-1">
+                {item.title}
+              </Text>
+              <Text className="text-sm text-gray-700 mb-2">
+                {item.description || "No description provided."}
+              </Text>
+              <Text className="text-xs text-gray-500 italic">
+                {new Date(item.created_at).toLocaleDateString()}
               </Text>
             </View>
           ))}

@@ -45,12 +45,21 @@ export default function NoticeScreen() {
       return;
     }
 
+    const noticeData = {
+      title,
+      description,
+      category: "general", // default category
+      priority: "normal", // default priority
+      status: "draft", // default status
+      created_at: new Date().toISOString().split("T")[0], // YYYY-MM-DD
+    };
+
     try {
       if (editId) {
-        await updateNotice(editId, { title, description });
+        await updateNotice(editId, noticeData);
         Alert.alert("✅", "Notice updated successfully");
       } else {
-        await addNotice({ title, description });
+        await addNotice(noticeData);
         Alert.alert("✅", "Notice added successfully");
       }
 
@@ -70,26 +79,22 @@ export default function NoticeScreen() {
   };
 
   const handleDelete = async (id: number) => {
-    Alert.alert(
-      "Confirm",
-      "Are you sure you want to delete this notice?",
-      [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: "Delete",
-          style: "destructive",
-          onPress: async () => {
-            try {
-              await deleteNotice(id);
-              Alert.alert("✅", "Notice deleted");
-              loadNotices();
-            } catch {
-              Alert.alert("❌", "Failed to delete notice");
-            }
-          },
+    Alert.alert("Confirm", "Are you sure you want to delete this notice?", [
+      { text: "Cancel", style: "cancel" },
+      {
+        text: "Delete",
+        style: "destructive",
+        onPress: async () => {
+          try {
+            await deleteNotice(id);
+            Alert.alert("✅", "Notice deleted");
+            loadNotices();
+          } catch {
+            Alert.alert("❌", "Failed to delete notice");
+          }
         },
-      ]
-    );
+      },
+    ]);
   };
 
   return (

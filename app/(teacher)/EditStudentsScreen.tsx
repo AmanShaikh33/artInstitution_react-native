@@ -1,4 +1,3 @@
-// app/screens/EditStudentsScreen.tsx
 import { useEffect, useState } from "react";
 import {
   View,
@@ -8,35 +7,64 @@ import {
   Alert,
   TextInput,
   Modal,
+  ActivityIndicator,
 } from "react-native";
-import { fetchAllStudents, deleteStudent, payStudentFees } from "../../utils/api";
+import {
+  fetchAllStudents,
+  deleteStudent,
+  payStudentFees,
+  fetchAllAttendance,
+} from "../../utils/api";
 
 export default function EditStudentsScreen() {
   const [students, setStudents] = useState<any[]>([]);
+  const [attendanceData, setAttendanceData] = useState<any[]>([]);
   const [selectedStudent, setSelectedStudent] = useState<any | null>(null);
   const [amount, setAmount] = useState("");
   const [remarks, setRemarks] = useState("");
   const [modalVisible, setModalVisible] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState(""); // ✅ User input
+  const [debouncedQuery, setDebouncedQuery] = useState(""); // ✅ Debounced value
 
   useEffect(() => {
-    const loadStudents = async () => {
+    const loadData = async () => {
       try {
-        const data = await fetchAllStudents();
-        const formatted = data.map((s: any) => ({
+        const [studentsData, attendance] = await Promise.all([
+          fetchAllStudents(),
+          fetchAllAttendance(),
+        ]);
+
+        const formattedStudents = studentsData.map((s: any) => ({
           id: String(s.id),
           name: s.name,
           totalFees: s.total_fees,
           pendingFees: s.pending_fees,
           joiningDate: s.j_date,
         }));
-        setStudents(formatted);
+
+        setStudents(formattedStudents);
+        setAttendanceData(attendance);
       } catch (err) {
-        Alert.alert("Error", "Failed to load students");
+        Alert.alert("Error", "Failed to load students or attendance");
+      } finally {
+        setLoading(false);
       }
     };
 
-    loadStudents();
+    loadData();
   }, []);
+
+  // ✅ Debounce logic (500ms delay)
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedQuery(searchQuery);
+    }, 500);
+
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [searchQuery]);
 
   const handleDelete = (id: string) => {
     Alert.alert(
@@ -97,15 +125,60 @@ export default function EditStudentsScreen() {
     }
   };
 
+  const calculateMonthlyAttendance = (studentId: string) => {
+    const currentMonth = new Date().getMonth();
+    const currentYear = new Date().getFullYear();
+
+    const studentAttendance = attendanceData.filter((a: any) => {
+      const date = new Date(a.date);
+      return (
+        a.student === Number(studentId) &&
+        date.getMonth() === currentMonth &&
+        date.getFullYear() === currentYear
+      );
+    });
+
+    const presentDays = studentAttendance.filter((a) => a.present).length;
+
+    // ✅ Dynamically get total days in current month
+    const totalDays = new Date(currentYear, currentMonth + 1, 0).getDate();
+
+    return `${presentDays}/${totalDays}`;
+  };
+
+  // ✅ Use debouncedQuery for filtering instead of searchQuery
+  const filteredStudents = students.filter((student) =>
+    student.name.toLowerCase().includes(debouncedQuery.toLowerCase())
+  );
+
+  if (loading) {
+    return (
+      <View className="flex-1 justify-center items-center bg-white">
+        <ActivityIndicator size="large" color="#4F46E5" />
+      </View>
+    );
+  }
+
   return (
     <View className="flex-1 bg-white p-4">
-      <Text className="text-xl font-bold mb-4 text-black">
-        👨‍🎓 Manage Students
-      </Text>
+      <Text className="text-xl font-bold mb-4 text-black">👨‍🎓 Manage Students</Text>
+
+      {/* ✅ Search Bar */}
+      <TextInput
+        placeholder="Search student by name..."
+        value={searchQuery}
+        onChangeText={setSearchQuery}
+        className="border border-gray-300 p-3 rounded mb-4 text-black"
+      />
 
       <FlatList
-        data={students}
+        data={filteredStudents} // ✅ Use filtered students
         keyExtractor={(item) => item.id}
+        ListEmptyComponent={
+          <Text className="text-center text-gray-500 mt-6">
+            No students found.
+          </Text>
+        }
         renderItem={({ item }) => (
           <View className="p-4 border-b border-gray-200">
             <Text className="text-lg font-semibold text-black">{item.name}</Text>
@@ -113,6 +186,9 @@ export default function EditStudentsScreen() {
             <Text className="text-sm text-gray-600">⏳ Pending Fees: ₹{item.pendingFees}</Text>
             <Text className="text-sm text-gray-600">
               📅 Joining Date: {new Date(item.joiningDate).toLocaleDateString()}
+            </Text>
+            <Text className="text-sm text-blue-600 font-semibold">
+              ✅ Attendance This Month: {calculateMonthlyAttendance(item.id)}
             </Text>
 
             <View className="flex-row mt-2">

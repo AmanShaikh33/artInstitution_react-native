@@ -52,41 +52,38 @@ export default function AttendanceScreen() {
     setAttendance((prev) => ({ ...prev, [id]: !prev[id] }));
   };
 
-  const handleSubmit = async () => {
-    setLoading(true); // ✅ start loading
-    try {
-      for (const student of students) {
-        const present = attendance[student.id] || false;
+const handleSubmit = async () => {
+  setLoading(true);
+  try {
+    for (const student of students) {
+      const present = attendance[student.id] || false;
 
-        const existing = records.find(
-          (r) => r.student === parseInt(student.id) && r.date === today
-        );
+      const existing = records.find(
+        (r) => r.student === parseInt(student.id) && r.date === today
+      );
 
-        if (existing) {
-          await updateAttendance(existing.id, {
-            date: today,
-            present,
-            student: parseInt(student.id),
-          });
-        } else {
-          await addAttendance({
-            date: today,
-            present,
-            student: parseInt(student.id),
-          });
-        }
+      if (existing) {
+        await updateAttendance(existing.id, {
+          date: today,
+          present,
+          student: parseInt(student.id),
+        });
+      } else {
+        await addAttendance(parseInt(student.id), today, present);
       }
-
-      setAttendance({});
-      setRefreshHistory((prev) => !prev);
-      Alert.alert("✅", "Attendance submitted/updated successfully!");
-    } catch (err) {
-      console.error("❌ Submission error:", err);
-      Alert.alert("Error", "Something went wrong while saving attendance");
-    } finally {
-      setLoading(false); // ✅ stop loading
     }
-  };
+
+    setAttendance({});
+    setRefreshHistory((prev) => !prev);
+    Alert.alert("✅", "Attendance submitted/updated successfully!");
+  } catch (err) {
+    console.error("❌ Submission error:", err);
+    Alert.alert("Error", "Something went wrong while saving attendance");
+  } finally {
+    setLoading(false);
+  }
+};
+ 
 
   return (
     <View className="flex-1 p-4 bg-white">
